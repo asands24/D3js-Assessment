@@ -49,10 +49,11 @@ svg text {
     }
 
 /*Mouseover*/
-.mouseover {
+.onMouseOver {
   background-color:  steelblue;
 }
 
-.mouseout {
+.onMouseOut {
   background-color: orange;
 }
+

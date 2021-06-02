@@ -205,7 +205,7 @@ var data = d3.json("/data/data.json", function(error, data) {
              return y(d.points) - 15;
          })
          .text(function() {
-             return [ '$' +d.value];  // Value of the text
+             return [d.wins, +d.draws, +d.losses];  // Value of the text
          });
     }
 
