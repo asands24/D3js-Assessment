@@ -35,3 +35,24 @@ rect:hover{
   fill: #FFFF00;
   transition: 0.5s all ease-in;
 }
+
+/*svg style*/
+
+svg rect {
+        fill: orange;
+    }
+
+svg text {
+        fill: white;
+        font: 10px sans-serif;
+        text-anchor: end;
+    }
+
+/*Mouseover*/
+.mouseover {
+  background-color:  steelblue;
+}
+
+.mouseout {
+  background-color: orange;
+}
