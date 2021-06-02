@@ -32,7 +32,7 @@
 /* For Bar Chart */
 
 rect:hover{
-  fill: #FFFF00;
+  fill: #FFFFFF;
   transition: 0.5s all ease-in;
 }
 

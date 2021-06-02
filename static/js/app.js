@@ -24,24 +24,24 @@ var tooltip = d3.select('body')
 
 
 // Read and arrange the data
-var data = d3.json("/data/data.json", function(error, data) {
+// var data = d3.json("/data/data.json", function(error, data) {
 
-        var stats =  d3.select("body")
-              .selectAll("p")
-              .data(data)
-              .enter()
-              .append("p")
-              .text(function (d, i) {
-                console.log("year: " + d.year);; // year
-                console.log("points: " + d.points); // points
-                console.log("wins: " + d.wins); // wins
-                console.log("draws: " + d.draws); // draws
-                console.log("losses: " + d.losses); // losses
+//         var stats =  d3.select("body")
+//               .selectAll("p")
+//               .data(data)
+//               .enter()
+//               .append("p")
+//               .text(function (d, i) {
+//                 console.log("year: " + d.year);; // year
+//                 console.log("points: " + d.points); // points
+//                 console.log("wins: " + d.wins); // wins
+//                 console.log("draws: " + d.draws); // draws
+//                 console.log("losses: " + d.losses); // losses
 
-                return d.year + ", " + d.points + ", " + d.wins+ ", " + d.losses;
-              });
+//                 return "Year: " + d.year + ", " + "Points: " + d.points + ", " + "Wins: " + d.wins+ ", " + "Lossses: " + d.losses;
+//               });
 
-      });
+//       });
 
 // // Set scales
 // var xScale = d3.scaleBand().rangeRound([0, 100]).padding(0.1);
@@ -98,18 +98,18 @@ var data = d3.json("/data/data.json", function(error, data) {
 //             .call(x_axis)
 
 
-// // Append the axes as G
-//         g.append("g")
-//          .call(d3.axisLeft(yScale).tickFormat(function(d){
-//              return "$" + d;
-//          }).ticks(10))
-//          .append("text")
-//          .attr("y", 6)
-//          .attr("dy", "0.71em")
-//          .attr("text-anchor", "end")
-//          .text("value");
+// Append the axes as G
+        // g.append("g")
+        //  .call(d3.axisLeft(yScale).tickFormat(function(d){
+        //      return "$" + d;
+        //  }).ticks(10))
+        //  .append("text")
+        //  .attr("y", 6)
+        //  .attr("dy", "0.71em")
+        //  .attr("text-anchor", "end")
+        //  .text("value");
 
-// Create Bars or Line function
+//Create Bars or Line function
  // g.selectAll(".bar")
  //         .data(data)
  //         .enter().append("rect")
@@ -120,8 +120,9 @@ var data = d3.json("/data/data.json", function(error, data) {
  //         .attr("height", function(d) { return height - yScale(d.value); 
  //         });
 
+//animated bar chart
     var svg = d3.select("svg"),
-        margin = 200,
+        margin = 300,
         width = svg.attr("width") - margin,
         height = svg.attr("height") - margin;
 
@@ -132,16 +133,38 @@ var data = d3.json("/data/data.json", function(error, data) {
        .attr("font-size", "24px")
        .text("Year")
 
+
     var x = d3.scaleBand().range([0, width]).padding(0.4),
         y = d3.scaleLinear().range([height, 0]);
 
     var g = svg.append("g")
             .attr("transform", "translate(" + 100 + "," + 100 + ")");
+            // .ticks('2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020');
 
-    d3.json("data/data.json", function(error, data) {
-        if (error) {
-            throw error;
-        }
+   
+   // g.append("g")
+   //  .attr("class", "y axis")
+   //  .attr("transform", "translate(30,0)")//magic number, change it at will
+   //  .call(d3.axisLeft(yScale));
+
+   var data = d3.json("/data/data.json", function(error, data) {
+
+        var stats =  d3.select("body")
+              .selectAll("p")
+              .data(data)
+              .enter()
+              .append("p")
+              .text(function (d, i) {
+                console.log("year: " + d.year);; // year
+                console.log("points: " + d.points); // points
+                console.log("wins: " + d.wins); // wins
+                console.log("draws: " + d.draws); // draws
+                console.log("losses: " + d.losses); // losses
+
+                return "Year: " + d.year + ", " + "Points: " + d.points + ", " + "Wins: " + d.wins+ ", " + "Lossses: " + d.losses;
+              });
+
+
 
         x.domain(data.map(function(d) { return d.year; }));
         y.domain([0, d3.max(data, function(d) { return d.points; })]);
@@ -188,13 +211,17 @@ var data = d3.json("/data/data.json", function(error, data) {
     
     //mouseover event handler function
     function onMouseOver(d, i) {
-        d3.select(this).attr('class', 'highlight');
+        d3.select(this).attr('class', 'highlight').style("fill", "#69b3a2");
         d3.select(this)
           .transition()     // adds animation
           .duration(400)
           .attr('width', x.bandwidth() + 5)
           .attr("y", function(d) { return y(d.points) - 10; })
           .attr("height", function(d) { return height - y(d.points) + 10; });
+          svg.append("circle").attr("cx",200).attr("cy",130).attr("r", 6).style("fill", "#69b3a2")
+          svg.append("circle").attr("cx",200).attr("cy",160).attr("r", 6).style("fill", "#404080")
+          svg.append("text").attr("x", 220).attr("y", 130).text("variable A").style("font-size", "15px").attr("alignment-baseline","middle")
+          svg.append("text").attr("x", 220).attr("y", 160).text("variable B").style("font-size", "15px").attr("alignment-baseline","middle")
 
         g.append("text")
          .attr('class', 'val') 
@@ -262,7 +289,4 @@ var data = d3.json("/data/data.json", function(error, data) {
 
 // Legend function
 
-svg.append("circle").attr("cx",200).attr("cy",130).attr("r", 6).style("fill", "#69b3a2")
-svg.append("circle").attr("cx",200).attr("cy",160).attr("r", 6).style("fill", "#404080")
-svg.append("text").attr("x", 220).attr("y", 130).text("variable A").style("font-size", "15px").attr("alignment-baseline","middle")
-svg.append("text").attr("x", 220).attr("y", 160).text("variable B").style("font-size", "15px").attr("alignment-baseline","middle")
+
