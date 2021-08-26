@@ -22,271 +22,299 @@ var tooltip = d3.select('body')
                 .attr('class', 'tooltip')
                 .attr('opacity', '0');
 
+legendary();
 
-// Read and arrange the data
-// var data = d3.json("/data/data.json", function(error, data) {
+// Data
+d3.json('../../data/data.json').then(function( data ){
+  console.log(data);
 
-//         var stats =  d3.select("body")
-//               .selectAll("p")
-//               .data(data)
-//               .enter()
-//               .append("p")
-//               .text(function (d, i) {
-//                 console.log("year: " + d.year);; // year
-//                 console.log("points: " + d.points); // points
-//                 console.log("wins: " + d.wins); // wins
-//                 console.log("draws: " + d.draws); // draws
-//                 console.log("losses: " + d.losses); // losses
+  var time_parse = d3.timeParse('%Y');
+  var time_format = d3.timeFormat('%Y');
 
-//                 return "Year: " + d.year + ", " + "Points: " + d.points + ", " + "Wins: " + d.wins+ ", " + "Lossses: " + d.losses;
-//               });
+  data.forEach(function(e, i){
+    data[i].year = time_parse(e.year);
+  });
 
-//       });
+  // Set scales
+  var x_scale = d3.scaleTime()
+         .domain([
+           d3.min(data, function(d){
+             return d.year;
+           }),
+           d3.max(data, function(d){
+             return d.year;
+           })
+         ])
+         .nice()
+         .range([margin.left, width - margin.left]);
 
-// // Set scales
-// var xScale = d3.scaleBand().rangeRound([0, 100]).padding(0.1);
-// var yScale = d3.scaleLinear().domain([2010, 2020]).range([200, 0]);
+  var yMax = d3.max(data, function(d){
+    return d.points;
+  });
 
-// var scale = d3.scaleLinear()
-//             .domain([d3.min(data), d3.max(data)])
-//             .range([0, 100]);
-// var g = svg.selectAll("g")
-//               .data(data)
-//               .enter()
-//               .append("g")
-//               .attr("transform", function (d, i) {
-//                   return "translate(0," + i * barHeight + ")";
-//               });
+  var y_scale = d3.scaleLinear()
+      .domain([
+        0, yMax * 1.2
+      ])
+      .nice()
+      .range([height - margin.top, margin.bottom]);
 
-// // Create axes
-//  var width = 500, height = 500;
-//  var data = [(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)];
+  // Create axes
+  var xAxis = d3.axisBottom(x_scale)
+      .ticks(10)
+      .tickFormat(function(d){
+        return time_format(d);
+      });
 
-// // Append SVG 
-// var svg = d3.select("body")
-//         .append("svg")
-//         .attr("width", width)
-//         .attr("height", height);
+  var yAxis = d3.axisLeft(y_scale)
+      .ticks(10);
 
+  // Append the axes as G
+  svg.append('g')
+      .attr('transform', 'translate(0,' + (height - margin.top) + ')')
+      .call(xAxis);
 
-// // Create scale
-//   var xscale = d3.scaleLinear()
-//         .domain([0, d3.max(data)])
-//         .range([0, width - 100]);
+  svg.append('text')
+      .attr('transform', 'translate(' + (width/2) + ',' + (height + margin.top + margin.bottom) + ')')
+      .style('text-anchor', 'middle')
+      .text('Season');
 
-//   var yscale = d3.scaleLinear()
-//           .domain([0, d3.max(data)])
-//           .range([height/2, 0]);
+  svg.append('g')
+      .attr('transform', 'translate(' + margin.left + ',0)')
+      .call(yAxis);
 
+  svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 5)
+      .attr('x', 0-(height/2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text('Chelsea FC Points Per Season');
 
-// // Add scales to axis
+  // Set up the line drawing function
+  var points_line = d3.line()
+      .x(function(d){
+        return x_scale( d.year );
+      })
+      .y(function(d){
+        return y_scale( d.points );
+      });
 
-//   var x_axis = d3.axisBottom()
-//       .scale(xscale);
+  var wins_line = d3.line()
+      .x(function(d){
+        return x_scale( d.year );
+      })
+      .y(function(d){
+        return y_scale( d.wins );
+      });
 
-//   var y_axis = d3.axisLeft()
-//           .scale(yscale);
+  // Append the two lines and circle groups to the svgWidth
+  createLine(points_line, '#0000FF', 'p_line');
+  createLine(wins_line, '#00FFFF', 'w_line');
 
-//   //Append group and insert axis
-// svg.append("g")
-//    .attr("transform", "translate(50, 10)")
-//    .call(y_axis);
+  // Append all three circle groups to the svgWidth
+  createCircleGroup('points', '#0000FF', 'p_scatter');
+  createCircleGroup('wins', '#00FFFF', 'w_scatter');
 
-//     var xAxisTranslate = height/2 + 10;
-//       svg.append("g")
-//             .attr("transform", "translate(50, " + xAxisTranslate  +")")
-//             .call(x_axis)
+  // Function createLine
+  function createLine(filter, color, name) {
+    svg.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', color)
+        .attr('stroke-width', 3)
+        .attr('d', filter)
+        .attr('class', name);
+  }
 
-
-// Append the axes as G
-        // g.append("g")
-        //  .call(d3.axisLeft(yScale).tickFormat(function(d){
-        //      return "$" + d;
-        //  }).ticks(10))
-        //  .append("text")
-        //  .attr("y", 6)
-        //  .attr("dy", "0.71em")
-        //  .attr("text-anchor", "end")
-        //  .text("value");
-
-//Create Bars or Line function
- // g.selectAll(".bar")
- //         .data(data)
- //         .enter().append("rect")
- //         .attr("class", "bar")
- //         .attr("x", function(d) { return xScale(d.year); })
- //         .attr("y", function(d) { return yScale(d.points); })
- //         .attr("width", xScale.bandwidth())
- //         .attr("height", function(d) { return height - yScale(d.value); 
- //         });
-
-//animated bar chart
-    var svg = d3.select("svg"),
-        margin = 300,
-        width = svg.attr("width") - margin,
-        height = svg.attr("height") - margin;
-
-    svg.append("text")
-       .attr("transform", "translate(100,0)")
-       .attr("x", 50)
-       .attr("y", 50)
-       .attr("font-size", "24px")
-       .text("Year")
-
-
-    var x = d3.scaleBand().range([0, width]).padding(0.4),
-        y = d3.scaleLinear().range([height, 0]);
-
-    var g = svg.append("g")
-            .attr("transform", "translate(" + 100 + "," + 100 + ")");
-            // .ticks('2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020');
-
-   
-   // g.append("g")
-   //  .attr("class", "y axis")
-   //  .attr("transform", "translate(30,0)")//magic number, change it at will
-   //  .call(d3.axisLeft(yScale));
-
-   var data = d3.json("/data/data.json", function(error, data) {
-
-        var stats =  d3.select("body")
-              .selectAll("p")
-              .data(data)
-              .enter()
-              .append("p")
-              .text(function (d, i) {
-                console.log("year: " + d.year);; // year
-                console.log("points: " + d.points); // points
-                console.log("wins: " + d.wins); // wins
-                console.log("draws: " + d.draws); // draws
-                console.log("losses: " + d.losses); // losses
-
-                return "Year: " + d.year + ", " + "Points: " + d.points + ", " + "Wins: " + d.wins+ ", " + "Lossses: " + d.losses;
-              });
-
-
-
-        x.domain(data.map(function(d) { return d.year; }));
-        y.domain([0, d3.max(data, function(d) { return d.points; })]);
-
-        g.append("g")
-         .attr("transform", "translate(0," + height + ")")
-         .call(d3.axisBottom(x))
-         .append("text")
-         .attr("y", height - 250)
-         .attr("x", width - 100)
-         .attr("text-anchor", "end")
-         .attr("stroke", "black")
-         .text("Year");
-
-        g.append("g")
-         .call(d3.axisLeft(y).tickFormat(function(d){
-             return "$" + d.points;
-         }).ticks(10))
-         .append("text")
-         .attr("transform", "rotate(-90)")
-         .attr("y", 6)
-         .attr("dy", "-5.1em")
-         .attr("text-anchor", "end")
-         .attr("stroke", "black")
-         .text("Points");
-
-        g.selectAll(".bar")
-         .data(data)
-         .enter().append("rect")
-         .attr("class", "bar")
-         .on("mouseover", onMouseOver) //Add listener for the mouseover event
-         .on("mouseout", onMouseOut)   //Add listener for the mouseout event
-         .attr("x", function(d) { return x(d.year); })
-         .attr("y", function(d) { return y(d.points); })
-         .attr("width", x.bandwidth())
-         .transition()
-         .ease(d3.easeLinear)
-         .duration(400)
-         .delay(function (d, i) {
-             return i * 50;
-         })
-         .attr("height", function(d) { return height - y(d.points); });
-    });
-    
-    //mouseover event handler function
-    function onMouseOver(d, i) {
-        d3.select(this).attr('class', 'highlight').style("fill", "#69b3a2");
-        d3.select(this)
-          .transition()     // adds animation
-          .duration(400)
-          .attr('width', x.bandwidth() + 5)
-          .attr("y", function(d) { return y(d.points) - 10; })
-          .attr("height", function(d) { return height - y(d.points) + 10; });
-          svg.append("circle").attr("cx",200).attr("cy",130).attr("r", 6).style("fill", "#69b3a2")
-          svg.append("circle").attr("cx",200).attr("cy",160).attr("r", 6).style("fill", "#404080")
-          svg.append("text").attr("x", 220).attr("y", 130).text("variable A").style("font-size", "15px").attr("alignment-baseline","middle")
-          svg.append("text").attr("x", 220).attr("y", 160).text("variable B").style("font-size", "15px").attr("alignment-baseline","middle")
-
-        g.append("text")
-         .attr('class', 'val') 
-         .attr('x', function() {
-             return x(d.year);
-         })
-         .attr('y', function() {
-             return y(d.points) - 15;
-         })
-         .text(function() {
-             return [d.wins, +d.draws, +d.losses];  // Value of the text
-         });
+  // Function createCircleGroup
+  function createCircleGroup(y_flavor, color, name) {
+    if (y_flavor == 'points'){
+      svg.append('g')
+        .selectAll('circle')
+        .data(data)
+        .enter()
+        .append('circle')
+        .attr('cx', function(d){
+          return x_scale( d.year );
+        })
+        .attr('cy', function(d){
+          return y_scale( d.points );
+        })
+        .attr('r', 5)
+        .attr('fill', function(d){
+            if (d.other.trophy){
+              if (d.other.trophy == 'Premiership Champions'){
+                return '#FFDF00';
+              } else {
+                return color;
+              }
+            } else {
+              return color;
+            }
+          })
+        .attr('stroke', '#000000')
+        .attr('class', name)
+        .style('visibility', 'visible')
+        .style('pointer-events', 'all')
+        .on('mouseover', mouseover);
+        //.on('mouseleave', mouseout);
+    } else if (y_flavor == 'wins'){
+      svg.append('g')
+            .selectAll('circle')
+            .data(data)
+            .enter()
+            .append('circle')
+            .attr('cx', function(d){
+                return x_scale( d.year );
+            })
+            .attr('cy', function(d){
+                return y_scale( d.wins );
+            })
+            .attr('r', 5)
+            .attr('fill', function(d){
+            if (d.other.trophy){
+              if (d.other.trophy == 'Premiership Champions'){
+                return '#FFDF00';
+              } else {
+                return color;
+              }
+            } else {
+              return color;
+            }
+          })
+        .attr('stroke', '#000000')
+            .attr('class', name)
+            .style('visibility', 'visible')
+            .style('pointer-events', 'all')
+            .on('mouseover', mouseover);
+            //.on('mouseleave', mouseout);
+    }
     }
 
-    //mouseout event handler function
-    function onMouseOut(d, i) {
-        // use the text label class to remove label on mouseout
-        d3.select(this).attr('class', 'bar');
-        d3.select(this)
-          .transition()     // adds animation
-          .duration(400)
-          .attr('width', x.bandwidth())
-          .attr("y", function(d) { return y(d.points); })
-          .attr("height", function(d) { return height - y(d.points); });
+});
 
-        d3.selectAll('.val')
-          .remove()
-    }
+ // Mouseover
+ function mouseover() {
 
+    let ugga_mugga = d3.select(this)._groups[0][0].__data__;
+    let selector = d3.select(this)._groups[0][0].classList[0];
+  console.log(selector);
+  selector = selector.slice(0, 1);
+    selector = '.' + selector + '_line';
 
+    d3.select( selector )
+        .transition()
+        .duration(750)
+        .attr('stroke-width', 6);
 
-// Create Circle group
-    // var color = d3.scaleOrdinal(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
-    // console.log(color(0))
-    // console.log(color(1))
-    // console.log(color(2))
-    // console.log(color(3))
-    // console.log(color(4))
-    // console.log(color(5))
+    d3.select(this)
+        .transition()
+        .duration(1000)
+        .attr('r', 9);
 
+    // Create the tooltip
+  let time_format = d3.timeFormat('%Y');
+  let trophy = (ugga_mugga.other.trophy) ? ugga_mugga.other.trophy : 'None';
 
-
-// Mouseover / mouseout
-// var hover = d3.selectAll("div")
-//       .on("mouseover", function(){
-//           d3.select(this)
-//             .style("background-color", "orange");
-
-//           // Get current event info
-//           console.log(d3.event);
-          
-//           // Get x & y co-ordinates
-//           console.log(d3.mouse(this));
-//       })
-//       .on("mouseout", function(){
-//           d3.select(this)
-//             .style("background-color", "steelblue")
-//       });
+    tooltip.transition()
+         .duration( 250 )
+         .style( "opacity", 0.85 )
+         .style("left", (d3.event.pageX + 20) + "px")
+         .style("top", (d3.event.pageY - 90) + "px");
+     tooltip.html(
+         "<table><tbody><tr><td class='wide'><strong>Season:</strong></td><td align='right'>" + time_format(ugga_mugga.year) + "</td></tr>" +
+         "<tr><td class='wide'><strong>Points:</strong></td><td align='right'>" + ugga_mugga.points + "</td></tr>" +
+         "<tr><td class='wide'><strong>W | D | L:</strong></td><td align='right'>" + ugga_mugga.wins + ' | ' + ugga_mugga.draws + ' | ' + ugga_mugga.losses + "</td></tr>" +
+         "<tr><td class='wide'><strong>Finished:</strong></td><td align='right'>" + ugga_mugga.other.finished + "</td></tr>" +
+         "<tr><td class='wide'><strong>Coach:</strong></td><td align='right'>" + ugga_mugga.other.coach + "</td></tr>" +
+         "<tr><td class='wide'><strong>Trophy:</strong></td><td align='right'>" + trophy + "</td></tr></tbody></table>"
+     );
+ }
 
 
-// tooltip
+ // Mouseout
+ function mouseout() {
+    let selector = d3.select(this)._groups[0][0].classList[0];
+    selector = selector.slice(0, 1);
+    selector = '.' + selector + '_line';
+
+    d3.select( selector )
+        .transition()
+        .duration(750)
+        .attr('stroke-width', 3);
+
+    d3.select(this)
+        .transition()
+        .duration(1000)
+        .attr('r', 5 );
+
+     // Fade out tooltip
+     tooltip.transition()
+            .duration( 250 )
+            .style( "opacity", 0 );
+ }
 
 
 
+ // Legend Function
+ function legendary() {
+   // Legend setup
+   var legendText = ['Points', 'Wins'];
+   var legendColors = ['#00FFFF', '#0000FF'];
+   let legend_height = 50;
+   let legend_width = 275;
+   let legend_margin = (margin.left + width)/2 - legend_width/2 - 30;
 
-// Legend function
+   // Append the legend
+   var legend_box = d3.select('body')
+                 .append('svg')
+                 .attr( 'height', legend_height )
+                 .attr( 'width', legend_width )
+                 .style('margin-left', legend_margin + 'px')
+                 .style( 'background-color', '#ffffff' )
+                 .style('margin-top', '10px');
 
+   var legend = legend_box.append('g')
+                 .attr('id', 'legend')
+                 .attr( 'height', legend_height )
+                 .attr( 'width', legend_width );
 
+   legend.append('rect')
+         .attr('x', 0)
+         .attr('y', 0)
+         .attr('height', legend_height )
+         .attr('width', legend_width )
+         .attr('fill', 'none')
+         .attr('stroke', '#000000')
+         .attr('stroke-width', '1px');
+
+   legend.append('text')
+         .attr('x', legend_width/2)
+         .attr('y', 15)
+         .style('font-size', '12px')
+         .style('text-anchor', 'middle')
+         .style('font-weight', 'bold')
+         .text('Legend');
+
+   var legenditem = legend.selectAll(".legenditem")
+    .data(d3.range(2))
+    .enter()
+    .append("g")
+        .attr("class", "legenditem")
+        .attr("transform", function(d, i) { return "translate(" + (i * 160) + ",25)"; });
+
+   legenditem.append("rect")
+    .attr("x", 15)
+    .attr("y", 0)
+    .attr("width", 15)
+    .attr("height", 15)
+    .attr("class", "rect")
+    .style("fill", function(d, i) { return legendColors[i]; });
+
+   legenditem.append("text")
+    .attr("x", 35)
+    .attr("y", 12)
+    .style('font-size', '12px')
+    .text(function(d, i) { return legendText[i]; });
+ }
